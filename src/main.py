@@ -68,30 +68,38 @@ def convert(x,a,b,c=0,d=1):
     """converts values in the range [a,b] to values in the range [c,d]"""
     return c + float(x-a)*float(d-c)/float(b-a)
 
+
+import tensorflow
 def change():
-    #root.configure({"background": _from_rgb(tuple(np.random.choice(range(256), size=3)))})
-    if len(numpy.array(ringBuffer)) is not 0:
-        extractor.y = numpy.array(ringBuffer)
+    extractor.y = numpy.array(ringBuffer)
 
-        data = extractor.extract()
+    data = extractor.extract()
 
-        # Cast this to a dataframe
-        dataframe = pandas.DataFrame.from_dict(data, orient='index').T
+    # Cast this to a dataframe
+    dataframe = pandas.DataFrame.from_dict(data, orient='index').T
 
-        # Scale this data
-        dataframeA = arousal_scaler.transform(numpy.array(dataframe, dtype=float))
-        dataframeV = valence_scaler.transform(numpy.array(dataframe, dtype=float))
+    # Scale this data
+    dataframeA = arousal_scaler.transform(numpy.array(dataframe, dtype=float))
+    dataframeV = valence_scaler.transform(numpy.array(dataframe, dtype=float))
 
-        # Predict the y values giving x
-        arousal = convert(arousal_model.predict(dataframeA)[0][0], .15, .85, 0, 1)
-        valence = convert(valence_model.predict(dataframeV)[0][0], .15, .85, 0, 1)
-        scale = tonicdata.scale(extractor.chroma_stft)
-        root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Scale: %s' % (round(arousal, 2), round(valence, 2), scale))
+    # Predict the y values giving x
+    arousal = convert(arousal_model.predict(dataframeA)[0][0], .15, .85, 0, 1)
+    valence = convert(valence_model.predict(dataframeV)[0][0], .15, .85, 0, 1)
 
-        root.configure({"background": colour.from_rgb(colour.emotion(valence,arousal, scale))})
+    # Call clear_session to prevent memory leaks
+    # https://www.tensorflow.org/api_docs/python/tf/keras/backend/clear_session
+    # https://stackoverflow.com/questions/46394574/keras-predict-memory-swap-increase-indefinitely
+    tensorflow.keras.backend.clear_session()
+
+    scale = tonicdata.scale(extractor.chroma_stft)
+    root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Scale: %s' % (round(arousal, 2), round(valence, 2), scale))
+
+    root.configure({"background": colour.from_rgb(colour.emotion(valence,arousal, scale))})
 
     root.after(1, change)
 
+import time
+time.sleep(2)
 root = Tk()
 change()
 root.mainloop()
