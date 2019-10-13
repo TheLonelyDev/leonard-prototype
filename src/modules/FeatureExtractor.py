@@ -2,19 +2,19 @@ import librosa
 import numpy
 
 class FeatureExtractor():
+    def __init__(self):
+        self.file = None
+        self.sr = 22050
+        self.y = None
+
     def loadFile(self, file, duration, offset):
         self.file = file
-        self.res_type = 'kaiser_best'
 
         # Load the file in mono format, for a (duration) timespan and start at timeframe a (to prevent intros misbehaving + generate multiple datasets)
-        self.y, self.sr = librosa.load(file, mono=True, duration=duration, offset=offset, sr=22050,
-                             res_type=self.res_type)
+        self.y, self.sr = librosa.load(file, mono=True, duration=duration, offset=offset, sr=self.sr, res_type='kaiser_best')
 
     def y(self, y):
         self.y = y
-
-    def sr(self, sr):
-        self.sr = 22050
 
     def extract(self):
         out = {}
@@ -43,7 +43,7 @@ class FeatureExtractor():
 
         # Entropy of Energy
         #   Librosa: http://librosa.github.io/librosa/generated/librosa.feature.spectral_contrast.html
-        self.entropy_of_energy = librosa.feature.spectral_contrast(S=numpy.abs(S), sr=self.sr)
+        self.entropy_of_energy = librosa.feature.spectral_contrast(S=numpy.abs(self.S), sr=self.sr)
         out['entropy_of_energy'] = numpy.mean(self.entropy_of_energy)
         out['entropy_of_energy_std'] = numpy.std(self.entropy_of_energy)
 
