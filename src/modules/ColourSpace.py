@@ -1,3 +1,33 @@
+# Colour mode ideas
+#   Normal
+#       Normal calculation of the colour
+#
+#   Smooth
+#       Linear interpolation
+#
+#   Step smooth
+#       Step based interpolation
+#
+#
+# Effect ideas (horizontal)
+#   Line/strip
+#       Just an uniform colour
+#
+#   BPM line/strip
+#       Uniform colour that gets it's intensity from the BPM
+#       The intensity is scaled with a logistic function with a min/max
+#
+#   Rolling marble
+#       Calc the colour, left append this colour to the array of leds (colours will shift from left to right)
+#
+#   Raindrop
+#       Update random array elements with the colour, decay/fade the other ones out
+#
+#   Waveform
+#       Just a waveform spread over a line that lights leds based on the frequency % (compared to min-max)
+
+
+
 import colorsys
 import numpy
 import scipy.constants
