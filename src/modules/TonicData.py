@@ -20,7 +20,7 @@ tonic_emotion_matrix = {
 
     'e major': 1,
     'e minor': -1,
-    'f major': -1,
+    'f major': 1, #-1?
     'f minor': -1,
 
     'f# major': 1,
@@ -45,7 +45,7 @@ tonic_emotion_matrix = {
     'bb minor': -1,
 
     'b major': -1,
-    'b minor': -1
+    'b minor': 1
 }
 
 # Create dict of numbers corresponding to pitches
