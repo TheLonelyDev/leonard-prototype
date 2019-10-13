@@ -26,5 +26,4 @@ class ColourSpace():
         x, y = self.cart2pol((valence - .5) * scale, arousal - .5)
 
         y = self.fix(numpy.degrees(y) + 270)
-        print(arousal, convert(arousal, 0, 1, 0.7, 1))
         return self.hsv2rgb(y / 360, 1, convert(arousal, 0, 1, 0.5, 1))
