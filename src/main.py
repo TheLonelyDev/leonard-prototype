@@ -68,8 +68,11 @@ def convert(x,a,b,c=0,d=1):
     """converts values in the range [a,b] to values in the range [c,d]"""
     return c + float(x-a)*float(d-c)/float(b-a)
 
-
 import tensorflow
+#tensorflow.compat.v1.disable_resource_variables()
+tensorflow.compat.v1.disable_eager_execution()
+
+import gc
 def change():
     extractor.y = numpy.array(ringBuffer)
 
@@ -89,7 +92,9 @@ def change():
     # Call clear_session to prevent memory leaks
     # https://www.tensorflow.org/api_docs/python/tf/keras/backend/clear_session
     # https://stackoverflow.com/questions/46394574/keras-predict-memory-swap-increase-indefinitely
-    tensorflow.keras.backend.clear_session()
+    # https://github.com/tensorflow/tensorflow/issues/30324
+    #tensorflow.keras.backend.clear_session()
+    #gc.collect()
 
     scale = tonicdata.scale(extractor.chroma_stft)
     root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Scale: %s' % (round(arousal, 2), round(valence, 2), scale))
@@ -97,6 +102,12 @@ def change():
     root.configure({"background": colour.from_rgb(colour.emotion(valence,arousal, scale))})
 
     root.after(1, change)
+
+# from pympler import muppy
+# from pympler import summary
+# all_objects = muppy.get_objects()
+# sum1 = summary.summarize(all_objects)
+# summary.print_(sum1)
 
 import time
 time.sleep(2)

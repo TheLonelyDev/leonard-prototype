@@ -9,6 +9,9 @@ import os
 from tensorflow.keras import models
 from tensorflow.keras import layers
 
+#tensorflow.compat.v1.disable_resource_variables()
+tensorflow.compat.v1.disable_eager_execution()
+
 class ModelFactory():
     def __init__(self, datadir, datafile):
         self.datadir = datadir
