@@ -62,7 +62,6 @@ class ModelFactory():
     # Load data & only return arousal (y) (1,) shape
     def MinMaxScaledArousal(self):
         data = self.LoadDatafile()
-
         return self.MinMaxScaling('arousal', data.iloc[:, 2:], data.iloc[:, :1])
 
     # Load data & only return valence (y) (1,) shape
@@ -77,15 +76,15 @@ class ModelFactory():
 
         model = models.Sequential([
             #  Create a relu activation layer
-            layers.Dense(39, activation='relu', input_shape=(x.shape[1],), kernel_initializer='normal'),
+            layers.Dense(32, activation='relu', input_shape=(x.shape[1],), kernel_initializer='normal'),
 
             # Add a dropout of 25% to prevent overfitting
             layers.Dropout(.25),
 
             # Create 3 relu based layers
-            layers.Dense(19, activation='relu'),
-            layers.Dense(9, activation='relu'),
-            layers.Dense(4, activation='relu'),
+            layers.Dense(32, activation='relu'),
+            #layers.Dense(64, activation='relu'),
+            #layers.Dense(32, activation='relu'),
 
             # Create the output based on tanh, this makes the output less likely to be around the centre point
             layers.Dense(1, activation='tanh')
@@ -108,8 +107,8 @@ class ModelFactory():
         x_train, x_test, y_train, y_test = self.MinMaxScaledArousal()
 
         model = self.MeanSquared(x_train, 'adam')
-        history = model.fit(x_train, y_train, epochs=200, verbose=True, validation_data=(x_test, y_test))
-
+        history = model.fit(x_train, y_train, epochs=400, verbose=True, validation_data=(x_test, y_test))
+        print(model.evaluate(x_test, y_test))
         model.save(self.pathFormat('arousal', '.h5'))
 
         return model
@@ -119,8 +118,8 @@ class ModelFactory():
         x_train, x_test, y_train, y_test = self.MinMaxScaledValence()
 
         model = self.MeanSquared(x_train, 'adam')
-        history = model.fit(x_train, y_train, epochs=200, verbose=True, validation_data=(x_test, y_test))
-
+        history = model.fit(x_train, y_train, epochs=400, verbose=True, validation_data=(x_test, y_test))
+        print(model.evaluate(x_test, y_test))
         model.save(self.pathFormat('valence', '.h5'))
 
         return model

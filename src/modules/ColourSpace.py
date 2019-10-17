@@ -27,7 +27,7 @@
 #       Just a waveform spread over a line that lights leds based on the frequency % (compared to min-max)
 
 
-
+from math import sin, cos, radians, pi, atan2, degrees
 import colorsys
 import numpy
 import scipy.constants
@@ -73,12 +73,24 @@ class ColourSpace():
         """
         return "#%02x%02x%02x" % rgb
 
+    def angle_to(self, p1, p2, rotation=0, clockwise=False):
+        angle = degrees(atan2(p1, p2)) - rotation
+        if not clockwise:
+            angle = -angle
+        return angle % 360
+
+
     def emotion(self, valence, arousal, scale):
-        x, y = self.cart2pol(((valence-.5) * -scale) * scipy.constants.golden, (arousal - .5)/scipy.constants.golden)
+        # Because a HSV hue angle is calculated counterclockwise & start at different '0 degrees' point we need to offset it
+        #   Note: We need to invert valence (= * -1)
 
-        y = self.fix(numpy.degrees(y) + 270) / 360
-        rgb = tuple(self.hsv2rgb(y, 1, 1))
-        v = tuple(interpolate(self.v, rgb, .1))
-        self.v = v
+        # Use the golden ratio for faster colour switching
+        x = (valence * -1)# * scipy.constants.golden_ratio
+        y = (arousal) #/ scipy.constants.golden_ratio
+        angle = self.angle_to(x, y, 0, False) / 360
 
-        return v
+        rgb = tuple(self.hsv2rgb(angle, 1, 1))
+        #v = tuple(interpolate(self.v, rgb, 1/scipy.constants.golden_ratio))
+        #self.v = v
+
+        return rgb

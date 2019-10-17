@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-mf = ModelFactory('C:\\Users\\Lonely\\PycharmProjects\\leonard-prototype\\src\\data', 'data4_min.json')
+mf = ModelFactory('C:\\Users\\Lonely\\PycharmProjects\\leonard-prototype\\src\\data', 'data4_min_16000hz_fixedmagphase.json')
 extractor = FeatureExtractor()
 tonicdata = TonicData()
 colour = ColourSpace()
@@ -29,16 +29,20 @@ arousal_scaler, arousal_scalery = mf.loadScaler('arousal')
 valence_scaler, valence_scalery = mf.loadScaler('valence')
 
 
+sample_rate = 16000
+extractor.sr = sample_rate
+
 # Create a ringbuffer so we only keep the last 2 seconds of audio (time * sample rate) (2 * 22050)
-ringBuffer = RingBuffer(2 * 22050)
+ringBuffer = RingBuffer(int(2 * sample_rate))
 
 # PyAudio callback
 def callback(in_data, frame_count, time_info, flag):
     audio_data = numpy.fromstring(in_data, dtype=numpy.float32)
 
     # Resample the data from 44100 into 22050 since our dataset uses 22050
-    audio_data = librosa.resample(audio_data, 44100, 22050)
-
+    #start = time.time()
+    #audio_data = librosa.resample(audio_data, 44100, sample_rate)
+    #print(time.time()-start)
     # Extend the ringbuffer
     ringBuffer.extend(audio_data)
 
@@ -59,7 +63,7 @@ for i in range(p.get_device_count()):
 # Create & start PyAudio stream
 #   Note: this is a mono channel
 #   Adjust frames_per_buffer to adjust accuracy
-stream = p.open(format=pyaudio.paFloat32, channels=1, rate=44100, input=True, output=False,
+stream = p.open(format=pyaudio.paFloat32, channels=1, rate=16000, input=True, output=False,
                 stream_callback=callback, input_device_index=dev_index)
 
 stream.start_stream()
@@ -72,10 +76,14 @@ import tensorflow
 #tensorflow.compat.v1.disable_resource_variables()
 tensorflow.compat.v1.disable_eager_execution()
 
-import gc
+
+import time
+
 def change():
+
     extractor.y = numpy.array(ringBuffer)
 
+    start = time.time()
     data = extractor.extract()
 
     # Cast this to a dataframe
@@ -86,8 +94,8 @@ def change():
     dataframeV = valence_scaler.transform(numpy.array(dataframe, dtype=float))
 
     # Predict the y values giving x
-    arousal = convert(arousal_model.predict(dataframeA)[0][0], .15, .85, 0, 1)
-    valence = convert(valence_model.predict(dataframeV)[0][0], .15, .85, 0, 1)
+    arousal = convert(arousal_model.predict(dataframeA)[0][0], .15, .85, -1, 1)
+    valence = convert(valence_model.predict(dataframeV)[0][0], .15, .85, -1, 1)
 
     # Call clear_session to prevent memory leaks
     # https://www.tensorflow.org/api_docs/python/tf/keras/backend/clear_session
@@ -96,11 +104,17 @@ def change():
     #tensorflow.keras.backend.clear_session()
     #gc.collect()
 
-    scale = tonicdata.scale(extractor.chroma_stft)
-    root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Scale: %s' % (round(arousal, 2), round(valence, 2), scale))
+    #scale = tonicdata.scale(extractor.chroma_stft)
+    scale = 0
+    #root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Scale: %s' % (round(arousal, 2), round(valence, 2), scale))
+    #print(time.time() - start)
+    root.winfo_toplevel().title('Arousal/energy: %s Key power: %s Time: %s' % (round(arousal, 2), round(valence, 2), time.time() - start))
 
+
+    #print(data['tempo'])
     root.configure({"background": colour.from_rgb(colour.emotion(valence,arousal, scale))})
-
+    #print(time.time() - start)
+    #print('-------------')
     root.after(1, change)
 
 # from pympler import muppy

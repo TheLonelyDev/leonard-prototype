@@ -72,3 +72,11 @@ venv36/
 MEMD_audio/
 
 .idea/
+
+MEMD_audio_wav16k/
+
+MEMD_audio_wav22050/
+
+MEMD_audio_wav22k/
+
+mooddetection/.ipynb_checkpoints/
