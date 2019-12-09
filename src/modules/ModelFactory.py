@@ -9,6 +9,11 @@ import os
 from tensorflow.keras import models
 from tensorflow.keras import layers
 
+import wandb
+from wandb.keras import WandbCallback
+wandb.init(project="leonard")
+
+epoch = 500
 #tensorflow.compat.v1.disable_resource_variables()
 tensorflow.compat.v1.disable_eager_execution()
 
@@ -42,7 +47,7 @@ class ModelFactory():
         self.saveScaler(type)
 
         # Split into train & test datasets
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1)
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
         return x_train, x_test, y_train, y_test
 
@@ -75,22 +80,13 @@ class ModelFactory():
         tensorflow.keras.backend.clear_session()
 
         model = models.Sequential([
-            #  Create a relu activation layer
             layers.Dense(32, activation='relu', input_shape=(x.shape[1],), kernel_initializer='normal'),
-
-            # Add a dropout of 25% to prevent overfitting
-            layers.Dropout(.25),
-
-            # Create 3 relu based layers
-            layers.Dense(32, activation='relu'),
-            #layers.Dense(64, activation='relu'),
-            #layers.Dense(32, activation='relu'),
-
-            # Create the output based on tanh, this makes the output less likely to be around the centre point
+            layers.Dense(16, activation='relu'),
+            layers.Dense(8, activation='relu'),
             layers.Dense(1, activation='tanh')
         ])
 
-        model.compile(optimizer="adam", loss='mean_squared_logarithmic_error', metrics=['mse', 'mae'])
+        model.compile(optimizer="adam", loss='mean_squared_logarithmic_error', metrics=['mse', 'mae', 'msle', tensorflow.keras.metrics.Precision(), tensorflow.keras.metrics.Recall()])
 
         return model
 
@@ -105,10 +101,13 @@ class ModelFactory():
     # Create a arousal based model
     def CreateArousalModel(self):
         x_train, x_test, y_train, y_test = self.MinMaxScaledArousal()
+        x_train, x_validate, y_train, y_validate = train_test_split(x_train, y_train, test_size=0.2)
 
         model = self.MeanSquared(x_train, 'adam')
-        history = model.fit(x_train, y_train, epochs=400, verbose=True, validation_data=(x_test, y_test))
+        history = model.fit(x_train, y_train, epochs=epoch, verbose=True, validation_data=(x_validate, y_validate), callbacks=[WandbCallback()])
+        print(model.summary())
         print(model.evaluate(x_test, y_test))
+
         model.save(self.pathFormat('arousal', '.h5'))
 
         return model
@@ -116,10 +115,13 @@ class ModelFactory():
     # Create a valence based model
     def CreateValenceModel(self):
         x_train, x_test, y_train, y_test = self.MinMaxScaledValence()
+        x_train, x_validate, y_train, y_validate = train_test_split(x_train, y_train, test_size=0.2)
 
         model = self.MeanSquared(x_train, 'adam')
-        history = model.fit(x_train, y_train, epochs=400, verbose=True, validation_data=(x_test, y_test))
+        history = model.fit(x_train, y_train, epochs=epoch, verbose=True, validation_data=(x_validate, y_validate), callbacks=[WandbCallback()])
+        print(model.summary())
         print(model.evaluate(x_test, y_test))
+
         model.save(self.pathFormat('valence', '.h5'))
 
         return model

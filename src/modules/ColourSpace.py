@@ -90,7 +90,7 @@ class ColourSpace():
         angle = self.angle_to(x, y, 0, False) / 360
 
         rgb = tuple(self.hsv2rgb(angle, 1, 1))
-        #v = tuple(interpolate(self.v, rgb, 1/scipy.constants.golden_ratio))
-        #self.v = v
+        v = tuple(interpolate(self.v, rgb, .1))#1/scipy.constants.golden_ratio))
+        self.v = v
 
-        return rgb
+        return v
